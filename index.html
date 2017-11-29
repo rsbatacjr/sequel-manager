@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sequel Manager</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/photon.min.css">
+    <link rel="stylesheet" href="css/atom-one-dark.css">
+
+    <!-- Javascript -->
+    <!-- <script src="js/menu.js" charset="utf-8"></script> -->
+    <style media="screen">
+      label {
+        margin-bottom: 2px;
+      }
+      .form-group {
+        margin-bottom: 2px;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+    <script src="js/highlight.pack.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <div class="window">
+      <header class="toolbar toolbar-header" style="padding: 2px 0 0 0">
+        <div class="btn-group">
+          <div class="form-group pull-left">
+            <select class="form-control" id="available-database" style="width:200px;height:30px;margin: 0 10px">
+              <option class='fixed' value="0">Choose Database ...</option>
+              <option class='fixed' value="1">Add Database</option>
+              <option class='fixed' value="2">Refresh Databases</option>
+              <option class='fixed' value="information_schema">information_schema</option>
+              <option class='fixed' value="mysql">mysql</option>
+              <option class='fixed' value="performance_schema">performance_schema</option>
+            </select>
+          </div>
+          <button class="window-mode btn btn-large btn-default" title="Structure" data-toggle="#window-mode-structure">
+            <span class="icon icon-tools"></span>
+          </button>
+          <button class="window-mode btn btn-large btn-default" title="Content" data-toggle="#window-mode-content">
+            <span class="icon icon-list"></span>
+          </button>
+          <button class="window-mode btn btn-large btn-default" title="Relations" data-toggle="#window-mode-relations">
+            <span class="icon icon-link"></span>
+          </button>
+          <button class="window-mode btn btn-large btn-default" title="Triggers" data-toggle="#window-mode-triggers">
+            <span class="icon icon-flash"></span>
+          </button>
+          <button class="window-mode btn btn-large btn-default" title="Table Info" data-toggle="#window-mode-table-info">
+            <span class="icon icon-info-circled"></span>
+          </button>
+          <button class="window-mode btn btn-large btn-default active" title="Query" data-toggle="#window-mode-query">
+            <span class="icon icon-monitor"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Your app's content goes inside .window-content -->
+      <div class="window-content">
+        <div class="connection-pane pane-group">
+          <div class="pane pane-sm sidebar">
+            <nav class="nav-group" id="favorite-connections">
+              <h5 class="nav-group-title">Favorites</h5>
+            </nav>
+          </div>
+
+          <div class="pane">
+            <div style="display:inline-block;min-width: 400px; min-height: 300px; position: absolute; top: 50%; left: 50%; transform: translateX(-50%) translateY(-50%)">
+              <div class="tab-group">
+                <div class="tab-item active">
+                  Standard
+                </div>
+                <div class="tab-item">
+                  Socket
+                </div>
+                <div class="tab-item">
+                  SSH
+                </div>
+              </div>
+              <div style="padding: 10px">
+                <div id="standard-connection" class="tab-content">
+                    <div class="form-group">
+                      <label for="conn-name">Name:</label>
+                      <input id="conn-name" name="conn-name" type="text" class="form-control" placeholder="127.0.0.1">
+                    </div>
+                    <div class="form-group">
+                      <label for="conn-host">Host:</label>
+                      <input id="conn-host" name="conn-host" type="text" class="form-control" placeholder="127.0.0.1">
+                    </div>
+                    <div class="form-group">
+                      <label for="conn-user">Username:</label>
+                      <input id="conn-user" name="conn-user" type="text" class="form-control" placeholder="root">
+                    </div>
+                    <div class="form-group">
+                      <label for="conn-pwd">Password:</label>
+                      <input id="conn-pwd" name="conn-pwd" type="password" class="form-control">
+                    </div>
+                    <div class="form-group">
+                      <label for="conn-db">Database</label>
+                      <input id="conn-db" name="conn-db" type="text" class="form-control" placeholder="Optional">
+                    </div>
+                    <div class="form-group">
+                      <label for="conn-port">Port</label>
+                      <input id="conn-port" name="conn-port" type="text" class="form-control" placeholder="3306">
+                    </div>
+                    <div class="form-group">
+                      <button id="connect-btn" class="btn btn-large btn-primary">Connect</button>
+                      <button id="add-favorite" class="before-connect-btn btn btn-mini btn-default hidden">Add to Favorite</button>
+                      <button id="save-changes" class="before-connect-btn btn btn-mini btn-default hidden">Save Changes</button>
+                      <button id="test-connection" class="before-connect-btn btn btn-mini btn-default hidden">Test Connection</button>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="database-pane pane-group hidden">
+          <div class="pane pane-sm sidebar">
+            <div class="">
+              <nav class="nav-group" id="table-lists">
+                <h5 class="nav-group-title">TABLES</h5>
+              </nav>
+            </div>
+            <div class="" style="min-height: 300px;padding: 0 10px">
+              <h5>TABLE INFORMATION</h5>
+              <div id="table-information">
+
+              </div>
+            </div>
+          </div>
+
+          <div class="pane">
+            <div id="window-mode-structure" class='window-mode-content hidden'>
+              <div class="">
+                <table id="tbl-table-structure" class="table-striped">
+                  <thead>
+                    <tr>
+                      <th>Field</th>
+                      <th>Type</th>
+                      <th>Length</th>
+                      <th>Unsigned</th>
+                      <th>Zerofill</th>
+                      <th>Binary</th>
+                      <th>Allow Null</th>
+                      <th>Key</th>
+                      <th>Default</th>
+                      <th>Extra</th>
+                      <th>Encoding</th>
+                      <th>Collation</th>
+                      <th>Comment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                  </tbody>
+                </table>
+              </div>
+              <div class="" style="height:100px">
+                <h5>INDEXES</h5>
+                <table id="tbl-table-indexes">
+                  <thead>
+                    <tr>
+                      <th>Non_unique</th>
+                      <th>Key_name</th>
+                      <th>Seq_in_index</th>
+                      <th>Column_name</th>
+                      <th>Collation</th>
+                      <th>Cardinality</th>
+                      <th>Sub_part</th>
+                      <th>Packed</th>
+                      <th>Comment</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+            </div>
+            <div id="window-mode-content" class='window-mode-content hidden'>
+              <div class="row">
+                Search
+              </div>
+              <div class="row">
+                <table id="table-content" class="table-striped">
+                  <thead>
+                    <tr>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div id="window-mode-relations" class='window-mode-content hidden'>
+              <h2>Relations</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Columns</th>
+                    <th>FK Database</th>
+                    <th>FK Table</th>
+                    <th>FK Columns</th>
+                    <th>On Update</th>
+                    <th>On Delete</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+            <div id="window-mode-triggers" class='window-mode-content hidden'>
+              <h2>Triggers</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Trigger</th>
+                    <th>Event</th>
+                    <th>Timing</th>
+                    <th>Statement</th>
+                    <th>Definer</th>
+                    <th>Created</th>
+                    <th>SQL Mode</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+            <div id="window-mode-table-info" class='window-mode-content hidden'>
+              <div id="table-info-details">
+
+              </div>
+            </div>
+            <div id="window-mode-query" class=''>
+              <div class="query-container">
+
+              </div>
+              <div class="query-container">
+
+              </div>
+              <div class="query-container">
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript">
+  var $ = require("jquery"),
+      mysql = require('mysql'),
+      connection = [],
+      cnn = {},
+      column_headers = [],
+      page_no = 1,
+      page_size = 200;
+
+  const {remote} = require('electron')
+  const {dialog, Menu, MenuItem} = require('electron').remote
+  const Store = require('electron-store')
+  const store = new Store()
+  const menu = new Menu()
+
+  menu.append(new MenuItem({label: "Rename", click() { alert("Rename") }}))
+
+  // window.addEventListener('contextmenu', (e) => {
+  //   e.preventDefault()
+  //   menu.popup(remote.getCurrentWindow())
+  // }, false)
+  //menu.popup(remote.getCurrentWindow())
+
+  // connections = [];
+  // connections.push({'host': 'localhost', 'username': 'root'});
+  //
+  // store.set('connections', connections);
+  //  console.log(store.get('connections'));
+
+  loadFavorites();
+
+  $('#conn-name, #conn-host, #conn-user, #conn-pwd, #conn-db, #conn-port').on('keyup', function(){
+    $('.before-connect-btn').toggleClass('hidden', false);
+  });
+
+  $('#connect-btn').on('click', function(e) {
+    connectNow();
+  });
+
+  $('#add-favorite').on('click', function(e) {
+    data = {
+      'name': $('#conn-name').val(),
+      'host': $('#conn-host').val(),
+      'user': $('#conn-user').val(),
+      'pass': $('#conn-pwd').val(),
+      'data': $('#conn-db').val(),
+      'port': ($('#conn-port').val() == "" ? "3306": $('#conn-port').val())
+    }
+    var conn = store.get('connections');
+
+    if (conn !== undefined) {
+      if (conn.length > 1)
+        connection = conn;
+      else
+        connection.push(conn[0]);
+    }
+
+    connection.push(data);
+
+    store.set('connections', connection);
+    loadFavorites();
+  })
+
+  $('#save-changes').on('click', function(e) {
+    conn = $.grep(connection, function(e) {return e.name == $('#conn-name').val()});
+    conn[0].host = $('#conn-host').val();
+    conn[0].user = $('#conn-user').val();
+    conn[0].pass = $('#conn-pwd').val();
+    conn[0].data = $('#conn-db').val();
+    conn[0].port = $('#conn-port').val();
+
+    store.set('connections', connection);
+  });
+
+  $('#test-connection').on('click', function(e) {
+    connectNow('test');
+  });
+
+  $(document).on('mousedown', '.nav-group-item', function(e) {
+    $('.nav-group-item').toggleClass('active', false);
+    $(this).toggleClass('active', true);
+    if (e.which == 1) {
+        $('#conn-name').attr("value", $(this).text());
+        $('#conn-host').attr("value", $(this).attr("data-host"));
+        $('#conn-user').attr("value", $(this).attr("data-user"));
+        $('#conn-pwd').attr("value", $(this).attr("data-pass"));
+        $('#conn-db').attr("value", $(this).attr("data-data"));
+        $('#conn-port').attr("value", $(this).attr("data-port"));
+    }
+    if (e.which == 3)
+      menu.popup(remote.getCurrentWindow())
+  });
+
+  $(document).on('change', '#available-database', function(e) {
+    switch ($(this).val()) {
+      case '0':
+        break;
+      case '1':
+        break;
+      case '2':
+        break;
+      default:
+        dbname = $(this).val();
+        showDatabaseTables();
+        break;
+    }
+  });
+
+  $(document).on('click', '.window-mode', function() {
+    if($(this).hasClass('active'))
+      return;
+
+    $('.window-mode').toggleClass('active', false);
+    $(this).toggleClass('active', true);
+
+    $('.window-mode-content').toggleClass('hidden', true);
+    $($(this).attr("data-toggle")).toggleClass('hidden', false);
+
+    // if(tbl_name === undefined) {return;}
+
+    switch ($(this).attr("data-toggle")) {
+      case "#window-mode-structure":
+        showTableStructure(tbl_name);
+        break;
+      case "#window-mode-content":
+        showTableContent(tbl_name);
+        break;
+      default:
+
+    }
+  });
+
+  $(document).on('click', '.table-names', function() {
+    tbl_name = $(this).text();
+    $('.table-names').toggleClass('active', false);
+    $(this).toggleClass('active', true);
+    page_no = 1;
+
+    showTableInformation(tbl_name);
+
+    active_window = $('.window-mode.active').attr('data-toggle');
+    console.log(active_window);
+    switch (active_window) {
+      case "#window-mode-structure":
+        showTableStructure(tbl_name);
+        break;
+      case "#window-mode-content":
+        showTableContent(tbl_name);
+        break;
+      default:
+
+    }
+    // showTableStructure(tbl_name);
+    // showTableContent(tbl_name);
+  });
+
+  function connectNow(mode) {
+    cnn = mysql.createConnection({
+      host: $('#conn-host').val(),
+      user: $('#conn-user').val(),
+      password: $('#conn-pwd').val(),
+      database: $('#conn-db').val(),
+      port: ($('#conn-port').val() == "" ? 3306: $('#conn-port').val())
+    });
+
+    cnn.connect(function(err) {
+      if(mode == 'test') {
+        if(err) {
+          e = err.message.split(':');
+          dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        } else {
+          dialog.showMessageBox({type: "info", "title": "Success", "message": "Connection Succeeded."});
+        }
+      }
+      else {
+        if(err) {
+          e = err.message.split(':');
+          dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        } else {
+          $('.connection-pane').toggleClass('hidden', true);
+          $('.database-pane').toggleClass('hidden', false);
+          refreshDatabases();
+        }
+      }
+    });
+    cnn.end();
+  }
+
+  function loadFavorites() {
+    connection = store.get('connections');
+
+    $('#favorite-connections').find('span.nav-group-item').remove();
+
+    $.each($(connection), function() {
+      cn = $(this)[0];
+      $('#favorite-connections').append('<span class="nav-group-item" data-host="'+cn.host+'" data-user="'+cn.user+'" data-pass="'+cn.pass+'" data-data="'+cn.data+'" data-port="'+cn.port+'">' +
+        '<span class="icon icon-database"></span>' +
+        cn.name +
+      '</span>');
+    });
+  }
+
+  function refreshDatabases() {
+    var default_db = $('#conn-db').val();
+    $('#available-database').find('option:not(.fixed)').remove();
+    cnn = mysql.createConnection({
+      host: $('#conn-host').val(),
+      user: $('#conn-user').val(),
+      password: $('#conn-pwd').val(),
+      database: default_db,
+      port: ($('#conn-port').val() == "" ? 3306: $('#conn-port').val())
+    });
+
+    cnn.connect(function(err) {
+      if(err) {
+        e = err.message.split(':');
+        dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        return;
+      }
+    });
+
+    cnn.query("SHOW Databases;", function(err, rows, fields) {
+      if(err) {
+        e = err.message.split(':');
+        dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        return;
+      }
+
+      $.each(rows, function() {
+        dbname = $(this)[0].Database;
+        if (dbname !== 'information_schema' && dbname !== 'mysql' && dbname !== 'performance_schema')
+          $('#available-database').append('<option class="db" value="'+dbname+'" '+(default_db == dbname ? 'selected' : '')+'>'+dbname+'</option>');
+      });
+
+      if(default_db != "") {
+        dbname = default_db;
+        showDatabaseTables();
+      }
+    });
+    cnn.end();
+  }
+
+  function showDatabaseTables() {
+    cnn = mysql.createConnection({
+      host: $('#conn-host').val(),
+      user: $('#conn-user').val(),
+      password: $('#conn-pwd').val(),
+      database: dbname,
+      port: ($('#conn-port').val() == "" ? 3306: $('#conn-port').val())
+    });
+
+    cnn.connect(function(err) {
+      if(err) {
+        e = err.message.split(':');
+        dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        return;
+      }
+    });
+
+    cnn.query("SHOW Tables;", function(err, rows, fields) {
+      if(err) {
+        e = err.message.split(':');
+        dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        return;
+      }
+      $('#table-lists').find('span').remove();
+
+      $.each(rows, function() {
+        table = $(this)[0]['Tables_in_' + dbname];
+        $('#table-lists').append('<span class="table-names nav-group-item">' +
+          '<span class="icon icon-layout"></span>' +
+          table +
+        '</span>');
+      });
+    });
+    cnn.end();
+  }
+
+  function showTableInformation(tbl_name) {
+    $('#table-information').html("");
+    cnn = mysql.createConnection({
+      host: $('#conn-host').val(),
+      user: $('#conn-user').val(),
+      password: $('#conn-pwd').val(),
+      database: 'information_schema',
+      port: ($('#conn-port').val() == "" ? 3306: $('#conn-port').val())
+    });
+
+    cnn.connect(function(err) {
+      if(err) {
+        e = err.message.split(':');
+        dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        return;
+      }
+    });
+
+    cnn.query("SELECT * FROM TABLES WHERE TABLE_SCHEMA='"+dbname+"' AND TABLE_NAME='"+tbl_name+"'", function(err, rows, fields) {
+      if(err) {
+        e = err.message.split(':');
+        dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        return;
+      }
+
+      info = rows[0];
+      data_size = info.DATA_LENGTH;
+      table_size = 0;
+      created = info.CREATE_TIME;
+      if(data_size < 999999999)
+        table_size = (data_size/1048576) + " MB";
+      if(data_size < 999999)
+        table_size = (data_size/1024) + " KB";
+      if(data_size < 999)
+        table_size = data_size + " B";
+      $('#table-information').append('<span class="nav-group-item"><span class="icon icon-cd"></span>created: '+created.getMonth() + "/" +created.getDate()+"/"+created.getFullYear()+'</span>');
+      $('#table-information').append('<span class="nav-group-item"><span class="icon icon-cd"></span>engine: '+info.ENGINE+'</span>');
+      $('#table-information').append('<span class="nav-group-item"><span class="icon icon-cd"></span>rows: '+info.TABLE_ROWS+'</span>');
+      $('#table-information').append('<span class="nav-group-item"><span class="icon icon-cd"></span>encoding: '+info.TABLE_COLLATION.substr(0, info.TABLE_COLLATION.indexOf('_'))+'</span>');
+      $('#table-information').append('<span class="nav-group-item"><span class="icon icon-cd"></span>size: '+table_size+'</span>');
+      $('#table-information').append('<span class="nav-group-item"><span class="icon icon-cd"></span>auto_increment: '+info.AUTO_INCREMENT+'</span>');
+
+      $('#table-info-details').append(
+        "<table style='width:100%;margin-top:15px'>" +
+          "<tr><td style='width:100px;text-align:right'>Type:</td><td>"+info.ENGINE+"</td><td>&nbsp;</td><td style='width:100px;alignment:right'>Created at:</td><td>"+info.CREATE_TIME+"</td></tr>"+
+          "<tr><td style='width:100px;text-align:right'>Encoding:</td><td>"+info.ENGINE+"</td><td>&nbsp;</td><td style='width:100px;alignment:right'>Updated at:</td><td>"+(info.UPDATE_TIME == null ? 'Not available': info.UPDATE_TIME)+"</td></tr>"+
+          "<tr><td style='width:100px;text-align:right'>Collation:</td><td>"+info.TABLE_COLLATION+"</td></tr>"+
+        "</table><hr>" +
+        "<table style='width:100%'>" +
+          "<tr><td style='width:100px;text-align:right'>Number of rows:</td><td>"+info.TABLE_ROWS+"</td><td>&nbsp;</td><td style='width:100px;alignment:right'>Data size:</td><td>"+table_size+"</td></tr>"+
+          "<tr><td style='width:100px;text-align:right'>Row format:</td><td>"+info.ROW_FORMAT+"</td><td>&nbsp;</td><td style='width:100px;alignment:right'>Max datasize:</td><td>"+info.MAX_DATA_LENGTH+"</td></tr>"+
+          "<tr><td style='width:100px;text-align:right'>Avg. row length:</td><td>"+info.AVG_ROW_LENGTH+"</td><td>&nbsp;</td><td style='width:100px;alignment:right'>Index size:</td><td>"+info.INDEX_LENGTH+"</td></tr>"+
+          "<tr><td style='width:100px;text-align:right'>Auto increment:</td><td>"+info.AUTO_INCREMENT+"</td><td>&nbsp;</td><td style='width:100px;alignment:right'>Free data size:</td><td>"+info.DATA_FREE+"</td></tr>"+
+        "</table><hr>"
+      );
+    });
+    cnn.end(function() {console.log('closed')});
+  }
+
+  function showTableStructure(tbl_name) {
+    $('#table-information').html("");
+    column_headers = [];
+
+    cnn = mysql.createConnection({
+      host: $('#conn-host').val(),
+      user: $('#conn-user').val(),
+      password: $('#conn-pwd').val(),
+      database: 'information_schema',
+      port: ($('#conn-port').val() == "" ? 3306: $('#conn-port').val())
+    });
+
+    cnn.connect(function(err) {
+      if(err) {
+        e = err.message.split(':');
+        dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        return;
+      }
+    });
+
+    cnn.query("SELECT * FROM COLUMNS WHERE TABLE_SCHEMA='"+dbname+"' AND TABLE_NAME='"+tbl_name+"'", function(err, rows, fields) {
+      if(err) {
+        e = err.message.split(':');
+        dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        return;
+      }
+      $('#tbl-table-structure tbody').find('tr').remove();
+      $.each(rows, function() {
+        field = $(this)[0];
+        field_length = field.COLUMN_TYPE.substr((field.COLUMN_TYPE.indexOf('(') + 1), field.COLUMN_TYPE.length - (field.COLUMN_TYPE.indexOf('(') + 2));
+        column_headers.push(field.COLUMN_NAME);
+// console.log(field);
+        $('#tbl-table-structure tbody').append(
+          '<tr><td>'+field.COLUMN_NAME+'</td>'+
+          '<td>'+field.DATA_TYPE+'</td>'+
+          '<td>'+(field.DATA_TYPE == 'datetime' ? '':field_length)+'</td>'+
+          '<td><input type="checkbox" /></td>'+
+          '<td><input type="checkbox" /></td>'+
+          '<td><input type="checkbox" /></td>'+
+          '<td><input type="checkbox" /></td>'+
+          '<td>'+field.COLUMN_KEY+'</td>'+
+          '<td>'+(field.COLUMN_DEFAULT == null ? '': field.COLUMN_DEFAULT)+'</td>'+
+          '<td>'+field.EXTRA+'</td>'+
+          '<td></td>'+
+          '<td></td>'+
+          '<td>'+field.COLUMN_COMMENT+'</td>'+
+          '</tr>'
+        );
+      });
+    });
+    cnn.end();
+  }
+
+  function showTableContent(tbl_name) {
+    skip = (page_no - 1) * page_size;
+    $('#table-information').html("");
+
+    cnn = mysql.createConnection({
+      host: $('#conn-host').val(),
+      user: $('#conn-user').val(),
+      password: $('#conn-pwd').val(),
+      database: $('#available-database').val(),
+      port: ($('#conn-port').val() == "" ? 3306: $('#conn-port').val())
+    });
+
+    cnn.connect(function(err) {
+      if(err) {
+        e = err.message.split(':');
+        dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        return;
+      }
+    });
+
+    cnn.query("SELECT * FROM "+tbl_name+" LIMIT "+page_no+", "+page_size, function(err, rows, fields) {
+      if(err) {
+        e = err.message.split(':');
+        dialog.showErrorBox("Access Denied", e[1] + ": " + e[2]);
+        return;
+      }
+
+      $('#table-content thead').find('tr').find('th').remove();
+      $('#table-content tbody').html("");
+      //
+      for (var i = 0; i < column_headers.length; i++) {
+        $('#table-content thead').find('tr').append('<th>'+column_headers[i]+'</th>');
+      }
+      //
+      $.each(rows, function() {
+        rec = $(this)[0];
+        row = $("<tr></tr>");
+        for (var i = 0; i < column_headers.length; i++) {
+          value = rec[column_headers[i]];
+          // console.log($.type(value));
+          if ($.type(value) == "date") {
+            content = value.getMonth() + "/" + value.getDate() + "/" + value.getFullYear() + ' ' + value.getHours() + ':' + value.getMinutes() + ':' + value.getSeconds();
+          } else {
+            content = value;
+          }
+          $('<td>'+content+'</td>').appendTo(row);
+        }
+        row.appendTo($('#table-content tbody'));
+      })
+
+    });
+  }
+//store.delete('connections');
+    // var mysql = require('mysql');
+    //
+    // var connection = mysql.createConnection({
+    //   host: 'localhost',
+    //   user: 'root',
+    //   password: 'root'
+    // });
+    //
+    // connection.connect(function(err) {
+    //   if(err) {
+    //     console.error(err.code);
+    //     console.error(err.fatal);
+    //   }
+    // });
+    //
+    // $query = 'SHOW Databases;';
+    //
+    // connection.query($query, function(err, rows, fields) {
+    //   if(err) {
+    //     console.error("An error ocurred performing the query.");
+    //     console.error(err);
+    //     return;
+    //   }
+    //
+    //   console.log("Query succesfully executed", rows);
+    // });
+    //
+    // connection.end(function() {
+    //
+    // });
+  </script>
+</html>

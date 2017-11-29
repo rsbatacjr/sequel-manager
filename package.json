@@ -1,0 +1,26 @@
+{
+  "name": "sequelManager",
+  "description": "Cross platform sequel manager",
+  "version": "0.0.1",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "1.6.15",
+    "electron-store": "^1.3.0",
+    "jquery": "^3.2.1",
+    "mysql": "^2.15.0",
+    "resizable": "^1.2.0",
+    "sqlite3": "^3.1.13"
+  },
+  "scripts": {
+    "start": "electron .",
+    "package-mac": "electron-packager . --overwrite --asar=true --platform=darwin --arch=x64 --icon=assets/icons/mac/icon.icns --prune=true --out=release-builds",
+    "build": "electron-packager . app --platform linux --arch x64 --out dist/",
+    "deb64": "electron-installer-debian --src dist/app-linux-x64/ --dest dist/installers/ --arch amd64 --platform=linux --overwrite --asar=true --prune=true"
+  },
+  "devDependencies": {
+    "electron": "~1.7.0",
+    "electron-installer-debian": "^0.7.1",
+    "electron-packager": "^9.1.0",
+    "electron-rebuild": "^1.6.0"
+  }
+}

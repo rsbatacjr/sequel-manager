@@ -1,0 +1,10 @@
+{
+  "dest": "dist/installers/",
+  "categories": [
+    "Utility"
+  ],
+  "lintianOverrides": [
+    "changelog-file-missing-in-native-package"
+  ],
+  "bin": "usr/bin/sequel-manager@ -> /usr/lib/sequel-manager/resources/app/launcher.sh"
+}
